@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教师节快乐</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        teacher: '#4A6FA5',
+                        accent: '#C8D8E8',
+                        gold: '#D4AF37',
+                    },
+                    fontFamily: {
+                        love: ['Ma Shan Zheng', 'cursive'],
+                        serif: ['Noto Serif SC', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .typing-cursor {
+                animation: blink 0.7s infinite;
+            }
+            .float {
+                animation: float 3s ease-in-out infinite;
+            }
+            .bg-blur {
+                backdrop-blur: 8px;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
+
+        @keyframes appear {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body
+    class="min-h-screen bg-gradient-to-br from-teacher/90 to-accent/90 flex flex-col items-center justify-center overflow-hidden relative">
+    <!-- 背景装饰 -->
+    <div id="decorations-container" class="fixed inset-0 pointer-events-none z-0"></div>
+
+    <!-- 主容器 -->
+    <div
+        class="container max-w-2xl mx-auto relative z-10 bg-white/10 bg-blur rounded-2xl p-6 md:p-8 shadow-xl border border-white/20">
+        <div id="content" class="opacity-0 transform translate-y-8 transition-all duration-1000">
+            <!-- 标题 -->
+            <h1 class="text-[clamp(2rem,5vw,3rem)] font-love text-center text-white text-shadow mb-6">致亲爱的老师</h1>
+
+            <!-- 祝福内容 -->
+            <div id="message"
+                class="bg-white/10 backdrop-blur-sm rounded-xl p-6 md:p-8 text-white text-[clamp(1rem,2vw,1.25rem)] leading-relaxed shadow-lg font-serif">
+                <p id="typing-text" class="mb-6"></p>
+                <p class="text-right mt-8 font-love text-[clamp(1.2rem,3vw,1.5rem)]">您的学生敬上</p>
+            </div>
+
+            <!-- 互动按钮 -->
+            <div class="flex justify-center mt-8">
+                <button id="show-more"
+                    class="bg-white/20 hover:bg-white/30 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl focus:outline-none">
+                    点击查看更多
+                </button>
+            </div>
+
+            <!-- 时间计数器 -->
+            <div id="time-counter"
+                class="mt-10 text-center text-white/80 opacity-0 transform translate-y-4 transition-all duration-1000">
+                <p class="mb-2">相识至今：</p>
+                <div id="clock" class="text-2xl md:text-3xl font-bold"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="mt-8 text-center text-white/60 text-sm z-10">
+        <p>学生敬制 · 2025教师节</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const content = document.getElementById('content');
+            const typingText = document.getElementById('typing-text');
+            const showMoreBtn = document.getElementById('show-more');
+            const timeCounter = document.getElementById('time-counter');
+            const clock = document.getElementById('clock');
+            const decorationsContainer = document.getElementById('decorations-container');
+
+            // 祝福内容
+            const messageContent = [
+                "尊敬的老师：",
+                "在这个特别的日子里，我想向您表达最诚挚的敬意和感谢。",
+                "记得第一次听您讲课的情景，您生动的讲解仿佛为我打开了一扇新的大门，让我对知识产生了浓厚的兴趣。",
+                "您不仅传授我们知识，更教会我们如何思考，如何面对困难，如何成为一个更好的人。您的耐心指导和无私奉献，我们都看在眼里，记在心里。",
+                "那些在课堂上的精彩瞬间，那些课后的悉心解答，那些鼓励的话语，都成为了我成长道路上宝贵的财富。",
+                "是您的谆谆教诲，让我明白了学习的意义；是您的言传身教，让我懂得了责任与担当。",
+                "今天是属于您的节日，请允许我说一声：老师，您辛苦了！祝您教师节快乐，身体健康，工作顺利！",
+                "您的学生敬上"
+            ];
+
+            // 相识开始时间（可根据实际情况修改）
+            const firstMeetDate = new Date('2023-09-01T00:00:00');
+
+            // 显示内容
+            setTimeout(() => {
+                content.classList.remove('opacity-0', 'translate-y-8');
+                startTyping();
+            }, 500);
+
+            // 打字机效果
+            function startTyping() {
+                let index = 0;
+                let charIndex = 0;
+                let currentText = '';
+                let isDeleting = false;
+                let isEnd = false;
+
+                function type() {
+                    if (isEnd) return;
+
+                    if (isDeleting) {
+                        currentText = messageContent[index].substring(0, charIndex - 1);
+                        charIndex--;
+                    } else {
+                        currentText = messageContent[index].substring(0, charIndex + 1);
+                        charIndex++;
+                    }
+
+                    typingText.innerHTML = currentText + '<span class="typing-cursor">|</span>';
+
+                    let typeSpeed = 100;
+
+                    if (isDeleting) {
+                        typeSpeed /= 2;
+                    }
+
+                    if (!isDeleting && charIndex === messageContent[index].length) {
+                        isDeleting = true;
+                        typeSpeed = 2000;
+
+                        if (index === messageContent.length - 1) {
+                            isEnd = true;
+                            typingText.innerHTML = currentText;
+                            setTimeout(() => {
+                                showMoreBtn.classList.remove('opacity-0');
+                            }, 1000);
+                            return;
+                        }
+                    } else if (isDeleting && charIndex === 0) {
+                        isDeleting = false;
+                        index++;
+                        typeSpeed = 500;
+                    }
+
+                    setTimeout(type, typeSpeed);
+                }
+
+                type();
+            }
+
+            // 显示更多按钮点击事件
+            showMoreBtn.addEventListener('click', () => {
+                showMoreBtn.classList.add('opacity-0');
+                setTimeout(() => {
+                    timeCounter.classList.remove('opacity-0', 'translate-y-4');
+                    startClock();
+                    createDecorations();
+                }, 500);
+            });
+
+            // 时间计数器
+            function startClock() {
+                function updateTime() {
+                    const now = new Date();
+                    const diff = now - firstMeetDate;
+
+                    const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
+                    const months = Math.floor((diff % (1000 * 60 * 60 * 24 * 365)) / (1000 * 60 * 60 * 24 * 30));
+                    const days = Math.floor((diff % (1000 * 60 * 60 * 24 * 30)) / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                    clock.textContent = `${years}年${months}月${days}天 ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+
+                updateTime();
+                setInterval(updateTime, 1000);
+            }
+
+            // 创建背景装饰
+            function createDecorations() {
+                const elements = ['fa-book', 'fa-pencil', 'fa-graduation-cap', 'fa-star', 'fa-lightbulb'];
+                const colors = ['#D4AF37', '#FFFFFF', '#C8D8E8', '#4A6FA5', '#8BB8E8'];
+                const totalElements = 30;
+
+                for (let i = 0; i < totalElements; i++) {
+                    setTimeout(() => {
+                        const decoration = document.createElement('div');
+                        const size = Math.random() * 20 + 10;
+                        const element = elements[Math.floor(Math.random() * elements.length)];
+                        const color = colors[Math.floor(Math.random() * colors.length)];
+                        const left = Math.random() * 100;
+                        const delay = Math.random() * 5;
+                        const duration = Math.random() * 10 + 10;
+
+                        decoration.innerHTML = `<i class="fa-solid ${element}"></i>`;
+                        decoration.className = 'absolute float';
+                        decoration.style.color = color;
+                        decoration.style.fontSize = `${size}px`;
+                        decoration.style.left = `${left}%`;
+                        decoration.style.top = '-20px';
+                        decoration.style.animation = `float ${duration}s ease-in-out ${delay}s infinite`;
+
+                        decorationsContainer.appendChild(decoration);
+
+                        // 移除装饰
+                        setTimeout(() => {
+                            decoration.remove();
+                        }, (duration + delay) * 1000);
+                    }, i * 300);
+                }
+            }
+        });
+    </script>
+    <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+    
+</body>
+
+</html>
